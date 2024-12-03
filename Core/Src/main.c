@@ -28,6 +28,8 @@
 #include "ssd1306_tests.h"
 #include "ssd1306.h"
 #include "ssd1306_fonts.h"
+#include "ccs811.h"
+#include "bme280.h"
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -98,6 +100,7 @@ void check_button_press(void);
 void print_mpu6050_axis_data(void);
 void print_temperature_data(void);
 void print_air_quality_data(void);
+bool periph_i2c_init(void);
 
 /* USER CODE END PFP */
 
@@ -548,6 +551,27 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+bool periph_i2c_init()
+{
+	// MPU6050 needs init call here if being used.
+
+	// init the OLED display driver.
+	ssd1306_Init();
+
+	// init the air quality sensor
+	if (ccs811_init() == false)
+	{
+		return false;
+	}
+
+	if (bme280_init() == false)
+	{
+		return false;
+	}
+
+	return true;
+}
 
 void pollADC(void)
 {

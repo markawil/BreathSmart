@@ -16,11 +16,6 @@
 
 #define I2C_MAX_DATA_SIZE 1u
 
-/*
- * Initializes the i2c interface, sends start commands to devices, returns false if something failed.
- */
-bool periph_i2c_init();
-
 /*!
  * \brief     This function will write the given data to a given register address on the i2c bus.
  * \param[in] device_add - Address of the device we want to write data to.

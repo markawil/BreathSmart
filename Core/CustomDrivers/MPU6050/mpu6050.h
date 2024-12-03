@@ -5,8 +5,8 @@
  *      Author: markwilkinson
  */
 
-#ifndef CUSTOMDRIVERS_MPU6050_H_
-#define CUSTOMDRIVERS_MPU6050_H_
+#ifndef CUSTOMDRIVERS_MPU6050_MPU6050_H_
+#define CUSTOMDRIVERS_MPU6050_MPU6050_H_
 
 #include <stdint.h>
 #include <stdbool.h>

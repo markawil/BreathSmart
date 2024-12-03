@@ -16,16 +16,6 @@ static bool module_init = false;
 // Max timeout in microseconds
 #define I2C_MAX_TIMEOUT 100u
 
-// init the i2c handle by setting the local variable, then init the i2c devices.
-bool periph_i2c_init()
-{
-	// MPU6050 doesn't need an init, just the ssd1306 display.
-	module_init = true;
-	ssd1306_Init(); // init the OLED display driver.
-	module_init = ccs811_init(); // init the air quality sensor
-	return module_init;
-}
-
 bool periph_i2c_tx(uint16_t device_add, uint8_t reg_add, uint8_t *data, uint16_t data_len)
 {
 	bool tx_okay = false;
