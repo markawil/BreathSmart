@@ -13,6 +13,7 @@
 
 /* Private variables */
 static struct bme280_device bme280;
+static bool device_init_complete_s = false;
 
 /* Private methods */
 bool get_calib_data();
@@ -38,20 +39,17 @@ bool bme280_init(void)
 	 /* Read the chip-id of bme280 sensor */
 	success = periph_i2c_rx(BME280_I2C_ADDRESS1, BME280_CHIP_ID_ADDR, &chip_id, 1);
 
+	if (!success || chip_id != BME280_CHIP_ID)
+	{
+		return false;
+	}
+
+	success = bme280_soft_reset();
+
 	if (success)
 	{
-		success = false; // reset flag
-		if (chip_id == BME280_CHIP_ID)
-		{
-			/* Reset the sensor */
-			success = bme280_soft_reset();
-
-			if (success)
-			{
-				/* Read the calibration data */
-				success = get_calib_data();
-			}
-		}
+		/* Read the calibration data */
+		success = get_calib_data();
 	}
 
 	return success;
