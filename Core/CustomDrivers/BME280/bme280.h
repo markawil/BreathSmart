@@ -36,12 +36,21 @@
 
 // addresses
 #define BME280_REG_TEMP_PRESS_CALIB_DATA		UINT8_C(0x88)
+#define BME280_REG_HUMIDITY_CALIB_DATA			UINT8_C(0xE1)
 
 // offsets to get the values
 #define BME280_PRESS                            UINT8_C(1)
 #define BME280_TEMP                             UINT8_C(1 << 1)
 #define BME280_HUM                              UINT8_C(1 << 2)
 #define BME280_ALL                              UINT8_C(0x07)
+
+/*! @name Bit shift macros */
+#define BME280_12_BIT_SHIFT                       UINT8_C(12)
+#define BME280_8_BIT_SHIFT                        UINT8_C(8)
+#define BME280_4_BIT_SHIFT                        UINT8_C(4)
+
+/*! @name Macro to combine two 8 bit data's to form a 16 bit data */
+#define BME280_CONCAT_BYTES(msb, lsb)           (((uint16_t)msb << 8) | (uint16_t)lsb)
 
 /* Defined data holder structs from Bosch's API example */
 
@@ -56,6 +65,19 @@ struct bme280_data
 
     /*! Compensated humidity */
     double humidity;
+};
+
+/* which comprises of uncompensated temperature, pressure and humidity data */
+struct bme280_uncomp_data
+{
+    /*! Un-compensated pressure */
+    uint32_t pressure;
+
+    /*! Un-compensated temperature */
+    uint32_t temperature;
+
+    /*! Un-compensated humidity */
+    uint32_t humidity;
 };
 
 /* data holder for settings chosen and sent to device */
@@ -137,6 +159,17 @@ struct bme280_calib_data
     /*! Variable to store the intermediate temperature coefficient */
     int32_t t_fine;
 };
+
+/* bme280 device structure data holder */
+struct bme280_device
+{
+    /*! Chip Id */
+    uint8_t chip_id;
+
+    /*! Trim data */
+    struct bme280_calib_data calib_data;
+};
+
 
 /* public methods */
 

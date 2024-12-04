@@ -192,6 +192,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  // TODO: Need to replace this every 0.5 seconds with timer interrupts since everything
+	  //       happens at the same time.
 	  print_temperature_data();
 	  pollADC();
 	  print_air_quality_data();
