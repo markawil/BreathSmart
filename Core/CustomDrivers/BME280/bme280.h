@@ -180,7 +180,7 @@ bool bme280_init(void);
 bool bme280_soft_reset(void);
 
 /* gives back compensated and calibrated values for all 3 */
-void bme280_get_temp_pressure_humidity(struct bme280_data *data);
+struct bme280_calib_data bme280_get_temp_pressure_humidity(struct bme280_data *data);
 
 
 #endif /* CUSTOMDRIVERS_BME280_BME280_H_ */

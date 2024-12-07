@@ -52,6 +52,8 @@ bool bme280_init(void)
 		success = get_calib_data();
 	}
 
+	device_init_complete_s = true;
+
 	return success;
 }
 
@@ -63,12 +65,12 @@ bool bme280_soft_reset()
 	return result;
 }
 
-void bme280_get_temp_pressure_humidity(struct bme280_data *data)
+struct bme280_calib_data bme280_get_temp_pressure_humidity(struct bme280_data *data)
 {
-	if (data == NULL)
+	if (data == NULL || !device_init_complete_s)
 	{
 		// TODO: need a way to propogate errors
-		return;
+		return bme280.calib_data;
 	}
 
 	bool success = false;
@@ -90,6 +92,8 @@ void bme280_get_temp_pressure_humidity(struct bme280_data *data)
 		 */
 		(void)bme280_compensate_data(&uncomp_data, data, &bme280.calib_data);
 	}
+
+	return bme280.calib_data;
 }
 
 bool get_calib_data()
