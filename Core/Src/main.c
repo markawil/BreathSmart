@@ -599,19 +599,6 @@ bool periph_i2c_init()
 	// init the OLED display driver.
 	ssd1306_Init();
 
-	// init the basic temp sensor in the MPU6050
-	if (mpu6050_init() == false)
-	{
-		return false;
-	}
-	else
-	{
-		// send over the serial port that mpu6050 was found
-		char mpu6050_msg[] = "mpu6050 Found!\r\n";
-		uint16_t buffer_len = strlen(mpu6050_msg);
-		periph_uart_send_tx(mpu6050_msg, buffer_len);
-	}
-
 	// init the air quality sensor
 //	if (ccs811_init() == false)
 //	{
