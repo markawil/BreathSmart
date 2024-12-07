@@ -595,21 +595,33 @@ static void MX_GPIO_Init(void)
 
 bool periph_i2c_init()
 {
-	// MPU6050 needs init call here if being used.
 
 	// init the OLED display driver.
 	ssd1306_Init();
 
-	// init the air quality sensor
-	if (ccs811_init() == false)
+	// init the basic temp sensor in the MPU6050
+	if (mpu6050_init() == false)
 	{
 		return false;
+	}
+	else
+	{
+		// send over the serial port that mpu6050 was found
+		char mpu6050_msg[] = "mpu6050 Found!\r\n";
+		uint16_t buffer_len = strlen(mpu6050_msg);
+		periph_uart_send_tx(mpu6050_msg, buffer_len);
 	}
 
-	if (bme280_init() == false)
-	{
-		return false;
-	}
+	// init the air quality sensor
+//	if (ccs811_init() == false)
+//	{
+//		return false;
+//	}
+
+//	if (bme280_init() == false)
+//	{
+//		return false;
+//	}
 
 	return true;
 }
