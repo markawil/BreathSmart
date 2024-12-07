@@ -22,7 +22,7 @@ bool periph_i2c_init()
 	// MPU6050 doesn't need an init, just the ssd1306 display.
 	module_init = true;
 	ssd1306_Init(); // init the OLED display driver.
-	module_init = ccs811_init(); // init the air quality sensor
+	//module_init = ccs811_init(); // init the air quality sensor
 	return module_init;
 }
 
