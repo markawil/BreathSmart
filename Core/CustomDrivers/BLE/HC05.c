@@ -10,9 +10,11 @@
 #include "stm32f3xx_hal.h"
 #include <string.h>
 
-bool get_address();
-bool check_ok();
+void get_address();
+void check_ok();
 
+static UART_HandleTypeDef huart_s;
+static bool uart_init_success;
 static uint8_t tx_buffer_s[MAX_HC05_BUFFER_LEN]; // tx_data buffer
 static uint8_t rx_buffer_s[MAX_HC05_BUFFER_LEN]; // rx_data buffer
 static uint8_t rx_data_s; // receive buffer
@@ -20,6 +22,9 @@ static uint32_t counter_s = 0; // count how many bytes are received
 
 bool hc05_init(UART_HandleTypeDef *huart)
 {
+	uart_init_success = false;
+	huart_s = *huart;
+
 	// Here these functions need called to get the UART ready to receive and transmit data over the UART using interrupts.
 	// Data sent out over the UART must be formatted, added to the tx_buffer_s buffer and sent from this buffer.
 	// Data received into UART is stored in rx_data_s buffer 1 character at a time which allows the user to look for specific characters.
@@ -31,32 +36,25 @@ bool hc05_init(UART_HandleTypeDef *huart)
 		return false;
 	}
 
-	if (!check_ok())
-	{
-		return false;
-	}
+	// both will send responses to the serial out UART for debugging.
+	check_ok();
+	get_address();
 
-	if (!get_address())
-	{
-		return false;
-	}
+	uart_init_success = true;
 
-	return true;
+	return uart_init_success;
 }
 
-bool check_ok()
+void check_ok()
 {
-	bool check_ok_success = false;
-	char buffer[10] = "";
-
-	return check_ok_success;
+	char buffer[2] = "AT";
+	hc05_uart_send_tx(buffer, sizeof(buffer));
 }
 
-bool get_address()
+void get_address()
 {
-	bool get_address_success = false;
-
-	return get_address_success;
+	char buffer[8] = "AT+ADDR?";
+	hc05_uart_send_tx(buffer, sizeof(buffer));
 }
 
 /*!
@@ -64,17 +62,17 @@ bool get_address()
  * \param[in] tx_buff - Buffer with the message we want to send.
  * \param[in] buffer_len - Maximum length of the buffer we want to send.
  */
-void hc05_uart_send_tx(UART_HandleTypeDef *huart, const char *buffer, uint16_t buffer_len)
+void hc05_uart_send_tx(const char *buffer, uint16_t buffer_len)
 {
 	strcpy((char *)tx_buffer_s, buffer);
-	HAL_UART_Transmit(huart, tx_buffer_s, buffer_len, 100);
+	HAL_UART_Transmit(&huart_s, tx_buffer_s, buffer_len, 100);
 }
 
 /*!
  * \brief    Readies the uart tx buffer
  * \param[in] huart - pointer to huart handle.
  */
-void hc05_uart_handle_tx(UART_HandleTypeDef *huart)
+void hc05_uart_handle_tx()
 {
 	memset(tx_buffer_s, '\0', (size_t)MAX_BUFFER_LEN); //empty the transmit data buffer to be ready for new data.
 }
@@ -82,7 +80,7 @@ void hc05_uart_handle_tx(UART_HandleTypeDef *huart)
 /*
  * \brief Handles the incoming data from HC05 module
  */
-void hc05_uart_handle_rx(UART_HandleTypeDef *huart)
+void hc05_uart_handle_rx()
 {
 	// store the next character
 	rx_buffer_s[counter_s++] = rx_data_s;
@@ -103,7 +101,7 @@ void hc05_uart_handle_rx(UART_HandleTypeDef *huart)
 	else
 	{
 		// Get ready for new data in rx_data_s pointer.
-		HAL_UART_Receive_IT(huart, &rx_data_s, 1);
+		HAL_UART_Receive_IT(&huart_s, &rx_data_s, 1);
 	}
 }
 

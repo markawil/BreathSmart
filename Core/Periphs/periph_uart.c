@@ -28,6 +28,7 @@ const char* hello_cmd = "hello";
  */
 bool periph_uart_init(UART_HandleTypeDef *huart)
 {
+	uart_init_success = false;
 	huart_s = *huart;
 
 	// Here these functions need called to get the UART ready to receive and transmit data over the UART using interrupts.

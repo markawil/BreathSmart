@@ -14,8 +14,8 @@
 #define MAX_HC05_BUFFER_LEN 100u
 
 bool hc05_init(UART_HandleTypeDef *huart);
-void hc05_uart_send_tx(UART_HandleTypeDef *huart, const char *buffer, uint16_t buffer_len);
-void hc05_uart_handle_tx(UART_HandleTypeDef *huart);
-void hc05_uart_handle_rx(UART_HandleTypeDef *huart);
+void hc05_uart_send_tx(const char *buffer, uint16_t buffer_len);
+void hc05_uart_handle_tx();
+void hc05_uart_handle_rx();
 
 #endif /* CUSTOMDRIVERS_BLE_HC05_H_ */
