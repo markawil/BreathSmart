@@ -62,6 +62,8 @@ void Error_Handler(void);
 #define BLUE_BUTTON_Pin GPIO_PIN_13
 #define BLUE_BUTTON_GPIO_Port GPIOC
 #define BLUE_BUTTON_EXTI_IRQn EXTI15_10_IRQn
+#define Bluetooth_Reset_Pin GPIO_PIN_14
+#define Bluetooth_Reset_GPIO_Port GPIOC
 #define USART2_TX_Pin GPIO_PIN_2
 #define USART2_TX_GPIO_Port GPIOA
 #define USART2_RX_Pin GPIO_PIN_3

@@ -19,6 +19,7 @@ static uint8_t tx_buffer_s[MAX_HC05_BUFFER_LEN]; // tx_data buffer
 static uint8_t rx_buffer_s[MAX_HC05_BUFFER_LEN]; // rx_data buffer
 static uint8_t rx_data_s; // receive buffer
 static uint32_t counter_s = 0; // count how many bytes are received
+const char hc05_error[] = "Error! Something failed for HC05 module\r\n";
 
 bool hc05_init(UART_HandleTypeDef *huart)
 {
@@ -36,11 +37,12 @@ bool hc05_init(UART_HandleTypeDef *huart)
 		return false;
 	}
 
-	// both will send responses to the serial out UART for debugging.
+	uart_init_success = true;
+
+	// both will send responses to the serial out UART for debugging,
+	// will set uart_init_success to false if error occurs.
 	check_ok();
 	get_address();
-
-	uart_init_success = true;
 
 	return uart_init_success;
 }
@@ -48,24 +50,39 @@ bool hc05_init(UART_HandleTypeDef *huart)
 void check_ok()
 {
 	char buffer[2] = "AT";
-	hc05_uart_send_tx(buffer, sizeof(buffer));
+	bool result = hc05_uart_send_tx(buffer, sizeof(buffer));
+	if (!result)
+	{
+		uart_init_success = false;
+	}
 }
 
 void get_address()
 {
 	char buffer[8] = "AT+ADDR?";
-	hc05_uart_send_tx(buffer, sizeof(buffer));
+	bool result = hc05_uart_send_tx(buffer, sizeof(buffer));
+	if (!result)
+	{
+		uart_init_success = false;
+	}
 }
 
 /*!
  * \brief    Sends content in the buffer over uart tx to the HC-05 module
- * \param[in] tx_buff - Buffer with the message we want to send.
+ * \param[in] buffer - Buffer with the message we want to send.
  * \param[in] buffer_len - Maximum length of the buffer we want to send.
  */
-void hc05_uart_send_tx(const char *buffer, uint16_t buffer_len)
+bool hc05_uart_send_tx(const char *buffer, uint16_t buffer_len)
 {
 	strcpy((char *)tx_buffer_s, buffer);
-	HAL_UART_Transmit(&huart_s, tx_buffer_s, buffer_len, 100);
+	HAL_StatusTypeDef result = HAL_UART_Transmit(&huart_s, tx_buffer_s, buffer_len, 100);
+	if (result != HAL_OK)
+	{
+		periph_uart_send_tx(hc05_error, sizeof(hc05_error));
+		return false;
+	}
+
+	return true;
 }
 
 /*!
@@ -85,7 +102,7 @@ void hc05_uart_handle_rx()
 	// store the next character
 	rx_buffer_s[counter_s++] = rx_data_s;
 
-	// send the received character out over the serial output tx
+	// send the received character out over the serial output TX
 	periph_uart_send_tx((char*)&rx_data_s, 1);
 
 	// if we've received a character already and previous character was O and current is K

@@ -161,6 +161,12 @@ int main(void)
 	  assert(false);
   }
 
+//  // init the HC05 Bluetooth module over UART
+//  if (hc05_init(&huart1) == false)
+//  {
+//	  assert(false);
+//  }
+
   // init the i2c devices.
   if (periph_i2c_init() == false)
   {
@@ -168,7 +174,7 @@ int main(void)
   }
   else
   {
-	  // draw the github logo on the OLED as the intro
+	  // i2c init succeeded, draw the Github logo on the OLED as the intro
 	  draw_github_intro();
 	  HAL_Delay(1000);
   }
@@ -196,13 +202,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  // TODO: Need to replace this every 0.5 seconds with timer interrupts since everything
-	  //       happens at the same time.
-	  print_temperature_data();
-	  pollADC();
-	  print_air_quality_data();
-	  ssd1306_UpdateScreen();
-	  HAL_Delay(500);
+	  // Nothing happens in the while loop, interrupts for
+	  // UART and Timer3 fire for
   }
   /* USER CODE END 3 */
 }
@@ -569,6 +570,9 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(Bluetooth_Reset_GPIO_Port, Bluetooth_Reset_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : BLUE_BUTTON_Pin */
@@ -576,6 +580,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(BLUE_BUTTON_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : Bluetooth_Reset_Pin */
+  GPIO_InitStruct.Pin = Bluetooth_Reset_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(Bluetooth_Reset_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : LD2_Pin */
   GPIO_InitStruct.Pin = LD2_Pin;
@@ -605,7 +616,7 @@ bool periph_i2c_init()
 //	{
 //		return false;
 //	}
-
+	// init the temp+humidity sensor
 //	if (bme280_init() == false)
 //	{
 //		return false;
@@ -711,6 +722,7 @@ void EXTI15_10_IRQHandler(void)
   /* USER CODE END EXTI15_10_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(BLUE_BUTTON_Pin);
   /* USER CODE BEGIN EXTI15_10_IRQn 1 */
+  // blue button was pressed update the flag.
   it_flag = true;
   /* USER CODE END EXTI15_10_IRQn 1 */
 }
@@ -747,7 +759,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	timer_flag = true;
+	// our (close to 1 second) timer elapsed, do updates in here.
+	//timer_flag = true;
+
+	print_temperature_data();
+	pollADC();
+	print_air_quality_data();
+	ssd1306_UpdateScreen();
 }
 
 /**
