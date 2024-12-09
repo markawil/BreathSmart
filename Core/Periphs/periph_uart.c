@@ -31,7 +31,7 @@ bool periph_uart_init(UART_HandleTypeDef *huart)
 	uart_init_success = false;
 	huart_s = *huart;
 
-	// Here these functions need called to get the UART ready to receive and transmit data over the UART using interrupts.
+	// Here these functions must be called to get the UART ready to receive and transmit data over the UART using interrupts.
 	// Data sent out over the UART must be formatted, added to the tx_buffer_s buffer and sent from this buffer.
 	// Data received into UART is stored in rx_data_s buffer 1 character at a time which allows the user to look for specific characters.
 	HAL_StatusTypeDef tx_setup_ok = HAL_UART_Transmit_IT(huart, tx_buffer_s, MAX_BUFFER_LEN);
