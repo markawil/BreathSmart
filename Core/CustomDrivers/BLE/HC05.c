@@ -10,61 +10,62 @@
 #include "stm32f3xx_hal.h"
 #include <string.h>
 
-void get_address();
-void check_ok();
+bool get_address();
+bool check_ok();
 
 static UART_HandleTypeDef huart_s;
-static bool uart_init_success;
 static uint8_t tx_buffer_s[MAX_HC05_BUFFER_LEN]; // tx_data buffer
 static uint8_t rx_buffer_s[MAX_HC05_BUFFER_LEN]; // rx_data buffer
-static uint8_t rx_data_s; // receive buffer
+static uint8_t rx_data; // receive buffer
 static uint32_t counter_s = 0; // count how many bytes are received
 const char hc05_error[] = "Error! Something failed for HC05 module\r\n";
 
 bool hc05_init(UART_HandleTypeDef *huart)
 {
-	uart_init_success = false;
 	huart_s = *huart;
 
 	// Here these functions must be called to get the UART ready to receive and transmit data over the UART using interrupts.
 	// Data sent out over the UART must be formatted, added to the tx_buffer_s buffer and sent from this buffer.
 	// Data received into UART is stored in rx_data_s buffer 1 character at a time which allows the user to look for specific characters.
+	HAL_StatusTypeDef rx_setup_ok = HAL_UART_Receive_IT(huart, &rx_data, 1);
 	HAL_StatusTypeDef tx_setup_ok = HAL_UART_Transmit_IT(huart, tx_buffer_s, MAX_HC05_BUFFER_LEN);
-	HAL_StatusTypeDef rx_setup_ok = HAL_UART_Receive_IT(huart, &rx_data_s, 1);
 
 	if (tx_setup_ok != HAL_OK || rx_setup_ok != HAL_OK)
 	{
 		return false;
 	}
 
-	uart_init_success = true;
-
 	// both will send responses to the serial out UART for debugging,
-	// will set uart_init_success to false if error occurs.
-	check_ok();
-	get_address();
+	if (!check_ok())
+	{
+		return false;
+	}
 
-	return uart_init_success;
+	if (!check_ok())
+	{
+		return false;
+	}
+
+//	if (!get_address())
+//	{
+//		return false;
+//	}
+
+	return true;
 }
 
-void check_ok()
+bool check_ok()
 {
 	char buffer[2] = "AT";
 	bool result = hc05_uart_send_tx(buffer, sizeof(buffer));
-	if (!result)
-	{
-		uart_init_success = false;
-	}
+	return result;
 }
 
-void get_address()
+bool get_address()
 {
 	char buffer[8] = "AT+ADDR?";
 	bool result = hc05_uart_send_tx(buffer, sizeof(buffer));
-	if (!result)
-	{
-		uart_init_success = false;
-	}
+	return result;
 }
 
 /*!
@@ -100,25 +101,25 @@ void hc05_uart_handle_tx()
 void hc05_uart_handle_rx()
 {
 	// store the next character
-	rx_buffer_s[counter_s++] = rx_data_s;
+	//rx_buffer_s[counter_s++] = rx_data;
 
 	// send the received character out over the serial output TX
-	periph_uart_send_tx((char*)&rx_data_s, 1);
+	periph_uart_send_tx((char*)&rx_data, 1);
 
-	// if we've received a character already and previous character was O and current is K
-	if (counter_s > 1 && rx_buffer_s[counter_s - 1] == 'O' && rx_data_s == 'K')
-	{
-		// HC05 responded with OK, we can clear the buffers, send carriage return
-		const char *endline = "\r\n";
-		periph_uart_send_tx(endline, sizeof(endline));
-		memset(tx_buffer_s, '\0', (size_t)MAX_BUFFER_LEN);
-		memset(rx_buffer_s, '\0', (size_t)MAX_BUFFER_LEN);
-		counter_s = 0; // reset the counter to be ready for next line of data.
-	}
-	else
-	{
+//	// if we've received a character already and previous character was O and current is K
+//	if (counter_s > 1 && rx_buffer_s[counter_s - 1] == 'O' && rx_data_s == 'K')
+//	{
+//		// HC05 responded with OK, we can clear the buffers, send carriage return
+//		const char *endline = "\r\n";
+//		periph_uart_send_tx(endline, sizeof(endline));
+//		memset(tx_buffer_s, '\0', (size_t)MAX_BUFFER_LEN);
+//		memset(rx_buffer_s, '\0', (size_t)MAX_BUFFER_LEN);
+//		counter_s = 0; // reset the counter to be ready for next line of data.
+//	}
+//	else
+//	{
 		// Get ready for new data in rx_data_s pointer.
-		HAL_UART_Receive_IT(&huart_s, &rx_data_s, 1);
-	}
+		HAL_UART_Receive_IT(&huart_s, &rx_data, 1);
+//	}
 }
 

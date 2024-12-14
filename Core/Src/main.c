@@ -82,7 +82,7 @@ const float ref_voltage = 3.3f;
 const float volt_per_bit = ref_voltage / (float)adc_max_range;
 
 char buffer[100] = "";
-
+//uint8_t hc05_rx_data;
 static bool it_flag = false;
 static bool timer_flag = false;
 
@@ -161,11 +161,20 @@ int main(void)
 	  assert(false);
   }
 
-//  // init the HC05 Bluetooth module over UART
-//  if (hc05_init(&huart1) == false)
-//  {
-//	  assert(false);
-//  }
+  // init the HC05 Bluetooth module over UART
+  if (hc05_init(&huart1) == false)
+  {
+	  assert(false);
+  }
+  else
+  {
+//	  char hc05_init_msg[] = "HCO5 initialized!\r\n";
+//	  uint16_t buffer_len = strlen(hc05_init_msg);
+//	  periph_uart_send_tx(hc05_init_msg, buffer_len);
+  }
+
+//  // temporary setup for HC05 for basic testsing over UART
+//  (void)HAL_UART_Receive_IT(&huart1, &hc05_rx_data, 1);
 
   // init the i2c devices.
   if (periph_i2c_init() == false)
@@ -202,8 +211,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  // Nothing happens in the while loop, interrupts for
-	  // UART and Timer3 fire for
+	  // Nothing happens in the while loop, interrupts are used
+	  // for UART and Timer3.
   }
   /* USER CODE END 3 */
 }
@@ -611,6 +620,7 @@ bool periph_i2c_init()
 	// init the OLED display driver.
 	ssd1306_Init();
 
+	// TODO: Will enable when Bluetooth is setup and broadcasting
 	// init the air quality sensor
 //	if (ccs811_init() == false)
 //	{
@@ -653,12 +663,7 @@ void pollADC(void)
 
 void check_button_press(void)
 {
-	// check interrupt was set by pushing blue button
-	if (it_flag == true)
-	{
-		periph_uart_send_tx((char *)btn_message, 19);
-		it_flag = false;
-	}
+
 }
 
 /*!
@@ -723,7 +728,9 @@ void EXTI15_10_IRQHandler(void)
   HAL_GPIO_EXTI_IRQHandler(BLUE_BUTTON_Pin);
   /* USER CODE BEGIN EXTI15_10_IRQn 1 */
   // blue button was pressed update the flag.
-  it_flag = true;
+  periph_uart_send_tx((char *)btn_message, 19);
+  char buffer[2] = "AT";
+  (void)hc05_uart_send_tx(buffer, sizeof(buffer));
   /* USER CODE END EXTI15_10_IRQn 1 */
 }
 
@@ -754,6 +761,14 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	if (huart == &huart1)
 	{
 		hc05_uart_handle_rx(huart);
+//		if (hc05_rx_data == 1)
+//		{
+//			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET); // turn on LED
+//		}
+//		else if (hc05_rx_data == 0)
+//		{
+//			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET); // turn off LED
+//		}
 	}
 }
 
@@ -762,9 +777,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	// our (close to 1 second) timer elapsed, do updates in here.
 	//timer_flag = true;
 
-	print_temperature_data();
-	pollADC();
-	print_air_quality_data();
+	//print_temperature_data();
+	//pollADC();
+	//print_air_quality_data();
 	ssd1306_UpdateScreen();
 }
 
